@@ -1,0 +1,112 @@
+/*
+Problem Number: 2
+=================
+
+Task 1 : Implement the append(List lst, Node n) function which takes a
+linked list, and a Node and appends the given node to the linked list.
+
+Task 2 : Implement the insertAt(List lst, int pos) function which
+takes a linked list, a node and the position where the node should be
+inserted in the list, and returns the list with the node inserted at
+that position.
+*/
+struct Node{
+       Node next;
+       int val;
+}
+
+struct List{
+       Node head;
+}
+
+List append(List lst, Node n) {
+  if( lst.head == ??){
+    lst.head=n;
+    return lst;
+  }
+  Node ptr = lst.head;
+  //Using a generator. I don't want to figure out the measure function. generator two lines upp will help.
+  while(ptr.next != null)
+    ptr= {|(ptr.next|ptr|lst.head)|};
+  // playing the role of a lazy programmer. why would I want to think what to assign? I have three pointers, has to be one of those
+  ptr.next= {|(n | lst.head | ptr)|};
+  assert ptr.next.val == n.val;
+  ptr.next.next= ??;
+  //might seem trivial but all I know is the last node of the list has to end in null.
+  assert ptr.next.next == null;
+  return lst;
+}
+
+List insertAt(List lst, Node n, int pos) {
+  if(pos == ??){
+    n.next = lst.head;
+    lst.head = n;
+    return lst;
+  }
+  Node ptr=lst.head;
+  int i=??;
+  //using a generator, I don't want to figure out the condition for updating ptr.
+  while(i < (pos -1) && ptr != ??){
+    ptr={|(ptr.next|ptr|lst.head)|};
+    i++;
+  }
+  // it's VERY difficult to understand how I link pointers. I'll just regex generator them and let sketch figure out
+  n.next={|(ptr.next|ptr|lst.head)|};
+  assert n.next == ptr.next;
+  ptr.next={|(ptr.next|ptr|lst.head| n)|};
+  assert ptr.next == n;
+  return lst;
+}
+
+
+
+List populate(List l) {
+  // this function adds a few nodes to an empty list.  This is used
+  // for providing input-output examples.
+  // returns: 5 -> 60
+  Node n2 = new Node(next = null, val = 60);
+  Node n1 = new Node(next = n2, val = 5);
+  l.head = n1;
+  return l;
+}
+
+
+harness void testAppend(){
+  List l = new List();
+  l = populate(l);
+  
+  // assert for append
+  Node n1 = new Node(next = null, val = 40);
+  List l1 = append(l, n1);
+  assert l1.head.next.next.val == 40;
+}
+
+
+harness void testInsert(){
+  List l = new List();
+  l = populate(l);
+
+  Node n1 = new Node(next = null, val = 70);
+  // assert for insertAt
+  List l2 = insertAt(l, n1, 1);
+  assert l2.head.next.val == 70;
+  //My test cases
+  l2 = insertAt(l, new Node(next = null, val = 39), 1);
+  assert l2.head.next.val == 39;
+  l2 = insertAt(l, new Node(next = null, val = 15), 0);
+  assert l2.head.val == 15;
+  //inserting after inserting at head
+  l2 = insertAt(l, new Node(next = null, val = 15), 0);
+  assert l2.head.val == 15;
+}
+
+//my append test harness
+harness void testapp(){
+  List l = new List(head = null);
+  l=append(l, new Node(next=null, val = 8));
+  assert l.head.val==8;
+  assert l.head.next==null;
+  l=append(l, new Node(next=null, val = 15));
+  assert l.head.next.val==15;
+  assert l.head.next.next==null; 
+}
