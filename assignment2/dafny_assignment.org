@@ -1,0 +1,570 @@
+#+TITLE: Assignment 2 - Program Verification Using Dafny
+
+* Introduction
+In this assignment, you should be able to write
+ simple programs implementing algorithmic systems
+ and verify them using dafny.  As a part of the
+ assignment you are expected to
+1. Define the transition system for the given
+   problem.
+2. Define the pre and post conditions for the
+   initial and terminal states of the transition
+   system.
+3. Write the program implementing the transition
+   system in dafny
+4. Write the pre and post conditions in the
+   programme as defined in the transition system
+5. Run the program and see if your program
+   satisfies the pre and post conditions. The
+   challenge here is to identify as much of pre
+   and post conditions that you can think of.
+
+Refer the following examples and follow the same format for submission.
+
+* Examples
+
+** Computing max of two numbers
+
+*** Problem Definition
+
+1. We define the problem as a function $Max:A
+   \rightarrow B$
+2. A is the input space defined as $A = \mathbb{Z}
+   \times \mathbb{Z}$
+3. B is the output space defined as $B =
+   \mathbb{Z}$
+
+*** Transition System Definition
+
+$S_{max} = <X,X^{o},U,\rightarrow,Y,h>$
+
+1. We define the state space of the system as $X =
+   A \times B$ (cross product of input and output
+   space) , $X = \mathbb{Z} \times \mathbb{Z}
+   \times \mathbb{Z}$
+2. We define an initialization function $\rho: A
+   \rightarrow X$, which converts the input space
+   to state space.
+3. $\rho(a,b) = X^o = (a,b,c)$ where $a,b,c \in
+   \mathbb{Z}$ and $c = a$
+4. U = {next}
+5. Transition relation =def= $(a,b,c)
+   \xrightarrow[]{next} (a,b,b)$ if b > c $
+6. Y = B, As the output space of the system is
+   equal to the output space of the problem.
+7. $h:X \rightarrow Y$, as $Y = B$ $\implies h:X
+   \rightarrow B$.
+8. $h(x) = x[2]$, where $x \in X$ and $x[2]$ is
+   the 3^{rd} element from the 3 tuple state
+   vector.
+
+*** Program 
+
+ #+BEGIN_SRC dafny :tangle max.dfy
+// Input Space
+datatype InputSpace = InputSpace(a:int, b:int)
+
+// State Space
+datatype StateSpace = StateSpace(a:int, b:int, c:int)
+
+// rho function
+function method rho(tup:InputSpace) :  StateSpace
+{
+   StateSpace(tup.a,tup.b,tup.a)
+}
+
+// view function h
+function method pi(trip:StateSpace) : int
+{
+	(trip.c)
+}
+
+
+// Transition System
+method MaxTransitionSystem(initState:StateSpace) returns (terminalState:StateSpace)
+//pre-condition
+requires initState.a == initState.c
+// post-conditions:
+ensures terminalState.a < terminalState.b ==> terminalState.c == terminalState.b
+ensures terminalState.b <= terminalState.a ==> terminalState.c == terminalState.a
+ensures terminalState.c > terminalState.b ==> terminalState.c >= terminalState.a
+ensures terminalState.c == terminalState.a ==> terminalState.c >= terminalState.b
+ensures terminalState.c == terminalState.b ==> terminalState.c >= terminalState.a
+ensures terminalState.c >= terminalState.a && terminalState.c >= terminalState.b
+ensures terminalState.a == terminalState.b ==> terminalState.c == terminalState.a 
+        && terminalState.c == terminalState.b
+ensures initState.a > initState.b ==> terminalState.c == initState.a
+ensures initState.b > initState.a ==> terminalState.c == initState.b
+{
+	// actual definition begins here
+	var a := initState.a;
+	var b := initState.b;
+	var c := initState.c;
+if (a < b) {
+	c:=b;
+}
+terminalState := StateSpace(a,b,c);
+return terminalState;
+}
+
+// Orchestrator
+method Main()
+{
+var inputParameters := InputSpace(3,5);
+var initialState := rho(inputParameters);
+var terminalState := MaxTransitionSystem(initialState);
+var output := pi(terminalState);
+// Assertions use the pre/post-conditions to simplify
+// We don't care at all what happens inside each method
+// when we call it, as long as it satisfies its annotations.
+assert output == 5;
+}
+#+END_SRC
+
+*** Pre Conditions
+Define the pre conditions used.
+
+*** Post Conditions
++ ensure that if a is less than b, implies that c is equal to b
+Define the post conditions used.
+
+** Find the factorial of a number
+
+Given a positive number, find it's factorial.
+
+*** Problem Definition
+1. We define the problem as a function
+   $Fact:\mathbb{Z} \rightarrow \mathbb{Z}$
+2. The input as well as the outspace is
+   $\mathbb{Z}$
+
+*** Transition System Definition 
+1. $S_{fact} = <X,X^{o},U,\rightarrow,Y,h>$
+2. The state space of the system $X = \mathbb{Z}
+   \times \mathbb{Z}$
+3. We define a function $\rho:\mathbb{Z}
+   \rightarrow X$, which converts the input space
+   of the problem to the state space of the system
+4. $\rho(n) = (n,1)$, such that $n \in \mathbb{Z}$
+   is the case for the initial state. Hence, $X^o
+   = \rho(n) = (n,1)$.
+5. U = {next}
+6. Transition Relation $(a,b)
+   \xrightarrow[next]{fact} (a-1,b*a)$, such that
+   $a,b \in \mathbb{Z} \land a,b >0$
+7. We define a transition function $t:X
+   \rightarrow X$, and t^n as the n^{th} iterate
+   of function t, where $n \in \mathbb{Z} \land n
+   > 0$ defined by $t^0 = t, t^1 = t \circ t, t^n
+   = t \circ t....(n-1) times....\circ t = t \circ
+   t^{n-1}$
+8. Let X_f be the final state of the system,
+   defined as $X_f = t^n(a,b)$ iff $a=0$.  Now t^0
+   corresponds to X^o, and likewise t^n
+   corresponds to X_f. Which means $X^o
+   \xrightarrow[]{*} X_f = t^n$
+9. $Y = \mathbb{Z}$, as the view space of the
+   system is equal to the output space of the
+   problem
+10.$h:X \rightarrow Y$, where $h:X \rightarrow
+\mathbb{Z}$
+
+
+*** Program
+#+BEGIN_SRC dafny :tangle factorial.dfy
+// State Space
+datatype StateSpace  = StateSpace(i:int,a:int)
+
+function fact(i:int): int
+	decreases i
+{
+	if i >0	then i * fact(i-1) else 1
+}
+
+// Transition System
+method FactorialTransitions(initialState: StateSpace) returns (finalState: StateSpace)
+	// pre conditions
+	requires initialState.i >= 0
+	requires initialState.a == 1
+	//post condition
+	ensures finalState.i == 0
+  ensures finalState.a >= 1 ==> initialState.a >= 1
+	ensures finalState.a == fact(initialState.i)
+{
+	var n := initialState.i;
+	var i: int := n;
+	if i == 0 {
+		return  StateSpace(0,1);
+	}
+	else{
+	var f := 1;
+	while i >= 1
+	// loop invariance
+	decreases i
+	invariant 0 <= i <= n
+	invariant fact(i)*f == fact(n)
+	{
+		f := f * i;
+		i := i - 1;
+	}
+	return StateSpace(i,f);
+	}
+	
+}
+
+// Converts state space to output space
+function method pi(state: StateSpace): int
+{
+	state.a
+}
+
+// Converts input space to state space
+function method rho(n:int) : StateSpace
+{
+	StateSpace(n,1)
+}
+
+// Orchestrator
+method Main(){
+
+	var initialState := rho(5);
+	var terminalState := FactorialTransitions(initialState);
+	var f := pi(terminalState);
+	assert f == 120;
+}
+#+END_SRC
+*** Pre Condition
++ the input integer is always less than or equal to -1
+#+BEGIN_SRC 
+requires x <= -1
+#+END_SRC
+*** Post Conditions
+
++  ensure that every output value should be greater than or equal to zero
+#+BEGIN_SRC 
+ensures 0 <= y
+#+END_SRC
+
++ ensure that if x is greater than or equal to zero, implies that x will be equal to y
+#+BEGIN_SRC 
+ensures 0 <= x ==> x == y
+#+END_SRC
+
++  ensure that if x is less than zero, implies that y will be a negation of x i.e. y = -(x)
+#+BEGIN_SRC 
+ensures x < 0 ==> y == -x
+#+END_SRC
+
+
+* Assignment Problems
+** Question 1
+Write an iterative program which computes the
+Fibonacci for a given integer. The program should
+make use of a while / for loop as per the dafny
+syntax.
+
+*** Transition System Definition
+1> S_fib = < X, X_0, f, U, T, Y, h >
+2> StateSpace X = N x N x N (N denotes set of natural numbers.)
+3> We define rho as a function which converts input into statespace of system. rho(n) = (0,1,n)
+4> X_0 = rho(n)
+5> f = final state (only 1). Let (a,b,c) belong to X, a,b,c belong to N and c is 1.
+5> U = {next}
+6> Transition Relation T: (a,b,c) -> (b, a+b, c -1) if c > 1
+7> Y is the viewspace of the system = N 
+8> h is the view function mapping final state (or any element in X) to N
+*** Fibonacci Iterative Program
+ #+BEGIN_SRC :tangle
+//Input Space
+datatype InputSpace = InputSpace(a: nat)
+
+//State Space
+datatype StateSpace = StateSpace(x: nat, y: nat, n: nat)
+
+function fib(n: nat): nat
+requires n >= 1
+{
+   if n == 1 then 0 else
+   if n == 2 then 1 else
+                  fib(n - 1) + fib(n - 2)
+}
+
+//transition system
+method FibonacciTransitions(initialstate: StateSpace)
+returns (finalstate: StateSpace)
+requires initialstate.n > 0 && initialstate.x == 0 && initialstate.y == 1
+ensures finalstate.x == fib(initialstate.n)
+ensures finalstate.n == 1
+{
+    var n: nat:= initialstate.n;
+    var i: nat:= n;
+    if i == 1 {
+        return StateSpace(0,1,1);
+    }
+    else{
+        var x: nat:= initialstate.x;
+        var y: nat:= initialstate.y;
+        var t: nat:= 0;
+        while (i > 1)
+        decreases i
+        invariant 1 <= i <= n
+        invariant 1 <= (n - i + 1) <= n
+        invariant x == fib(n - i + 1)
+        invariant y == fib(n - i + 2)
+        {
+            t := y;
+            y := x + y;
+            x := t;
+            i := i - 1;
+        }
+        return StateSpace(x,y,i);
+    }
+}
+
+//rho function
+function method rho(n: nat) : StateSpace
+{
+    StateSpace(0,1,n)
+}
+
+//view function
+function method pi(s: StateSpace) : nat
+{
+    s.x
+}
+
+//Orchestrator 
+method Main(){
+    var initialstate: StateSpace:= rho(5);
+    var terminalstate: StateSpace:= FibonacciTransitions(initialstate);
+    var f: nat:= pi(terminalstate);
+    assert f == 3;
+}
+ #+END_SRC
+
+*** Pre Conditions
+1> Input Integer is greater than or equal to 1. (Note: Fibonacci no.s are being index from 1.)
+*** Post Conditions
+1> Ensure output value should be greater than or equal to 0.
+2> Ensure if input > 1 then output > 0
+3> Ensure if run on input x, x+1, x+2, f(x+2) == f(x+1) + f(x)
+** Question 2
+ Write a recursive program which computes the
+ Fibonacci for a given integer. The program should
+ *not* make use of a while / for loop. Use
+ appropriate recursive structure.
+
+*** Transition System Definition
+*** Fibonacci Recursive Program
+ #+BEGIN_SRC :tangle
+//Inputspace
+datatype InputSpace = InputSpace(a: nat)
+
+//Statespace
+datatype StateSpace = StateSpace(x: nat, y: nat, c: nat, n: nat)
+
+function fib(n: nat): nat
+requires n >= 1
+{
+   if n == 1 then 0 else
+   if n == 2 then 1 else
+                  fib(n - 1) + fib(n - 2)
+}
+
+//Recursive transition system
+method fib_transit(a: StateSpace) returns (b: StateSpace)
+requires 1 <= a.c <= a.n
+requires a.x == fib(a.c)
+requires a.y == fib(a.c + 1)
+ensures b.x == fib(a.n)
+ensures b.y == fib(a.n + 1)
+ensures b.c == b.n
+decreases a.n - a.c
+{
+    if (a.c == a.n){
+        b := a;
+    }
+    else{
+        assert a.x + a.y == fib(a.c + 2);
+        b:= fib_transit(StateSpace(a.y,a.x+a.y,a.c+1,a.n));
+    }
+}
+
+//Transition system driver
+method fib_transitions(init: StateSpace) returns (ret: StateSpace)
+requires init.x == 0 && init.y == 1 && init.c == 1 && init.n >= init.c
+ensures ret.c == ret.n
+ensures ret.x == fib(init.n)
+{
+    if (init.c == init.n) {
+        ret:= init;
+    }
+    else{
+        ret:= fib_transit(init);
+    }
+}
+
+//Rho function
+function method rho(n: nat): StateSpace
+{
+    StateSpace(0,1,1,n)
+}
+
+//View Function
+function method pi(s: StateSpace): nat
+{
+    s.x
+}
+
+//Orchestrator
+method Main(){
+    var init: StateSpace:= rho(5);
+    var term: StateSpace:= fib_transitions(init);
+    var f: nat:= pi(term);
+    assert f == 3;
+}
+ #+END_SRC
+
+*** Pre Conditions
+*** Post Conditions
+** Question 3
+ Write a program for bubble sort which takes input
+ as an integer array and produces a sorted array
+ using bubble sort algorithm.
+*** Transition System Definition
+*** Bubble Sort Program
+ #+BEGIN_SRC :tangle
+//Input space
+datatype InputSpace = InputSpace(a: array<int>)
+
+//Statespace
+datatype StateSpace = StateSpace(a: array<int>, i: nat)
+
+//checking if the array from index i to -1 is sorted
+predicate sorted(a: array<int>, i: nat)
+reads a
+requires a != null
+{
+   forall j, k :: 0 <= i <= j < k < a.Length ==> a[j] <= a[k]
+}
+
+//checking if all elements in the sorted half are greater than those in the unsorted half
+predicate partition(a: array<int>, i:nat)
+reads a
+requires a != null
+{
+    forall x,y :: 0 <= x <= i < y < a.Length ==> a[x] <= a[y]
+}
+
+//Transition System
+method BubbleSort(a: array<int>)
+  modifies a
+  requires a != null
+  requires a.Length > 0
+  ensures sorted(a, 0)
+  {
+    var i: nat:= a.Length - 1;
+    while(i > 0)
+      invariant i < 0 ==> a.Length == 0 // ask
+      decreases i
+      invariant sorted(a, i)
+      invariant partition(a, i)
+      {
+        var j := 0;
+        while (j < i)
+          decreases i - j
+          invariant 0 < i < a.Length && 0 <= j <= i
+          invariant sorted(a, i)
+          invariant partition(a, i)
+          invariant forall k :: 0 <= k <= j ==> a[k] <= a[j]
+          {
+            if(a[j] > a[j+1])
+              {
+                a[j], a[j+1] := a[j+1], a[j];
+              }
+              j := j + 1;
+          }
+          i := i -1;
+      }
+  }
+
+//Orchastrator
+  method Main() {
+  var a := new int[5];
+  a[0], a[1], a[2], a[3], a[4] := 89, 43, 57, 21, 73;
+  BubbleSort(a);
+  assert sorted(a,0);
+}
+ #+END_SRC
+
+*** Pre Conditions
+*** Post Conditions
+
+* Submission Guidelines
+** Emacs Based Submission
+
+Emacs is what you all are suggested to use to to
+solve the assignment. Emacs is a powerful editor
+which is used world wide in the scientific
+communities. It is a good tool to know and use
+going forward.
+
++ Follow this template to record your
+  solutions. Use the emacs in org-mode (Open emacs
+  -> Alt+X -> type org-mode).
++ Write the definition of transition system in the
+  section provided below each question
+  "*Transition System Definition*"
++ Write your code in the code blocks below each
+  question "*begin src ---- end src*"
++ Write the details of the pre condition in the
+  section provided below each section "*Pre
+  Conditions*"
++ Write the details of the post condition in the
+  section provided below each section "*Post
+  Conditions*"
+
+** Alternate Submission
+
++ You can use alternative methods based on your convenience to solve the assignment(Visual Studio, Text Editors etc.)
++ Finally make sure that your solutions are recorded in the format specified above (Copy and paste text/code in the suitable sections)
+
+** Submission Format
++ Create a folder names "Assignment2" in your github assignment repository
++ Put all the solution artefacts inside the folder
++ Commit and push the solution
+
+* Grading Scheme
+
++ Assignment Marks - 40
++ Extra Marks - 10
++ Total Scorable Marks - 50
+
+|-------+--------------------------------------------+----------|
+| Sr.No | Category                                   |    Marks |
+|-------+--------------------------------------------+----------|
+|     1 | Trasition System Definition                |       10 |
+|-------+--------------------------------------------+----------|
+|     2 | Program in Dafny                           |       10 |
+|-------+--------------------------------------------+----------|
+|     3 | Pre-Conditions                             |        5 |
+|-------+--------------------------------------------+----------|
+|     4 | Post-Conditions                            |        5 |
+|-------+--------------------------------------------+----------|
+|     5 | Showing pre/post conditions                |       10 |
+|       | in transition system definition            |          |
+|-------+--------------------------------------------+----------|
+|     6 | Thoughtful and clever pre/post conditions  | Extra 10 |
+|       | (with appropriate explanation) that you    |          |
+|       | could define within your transition system |          |
+|       |                                            |          |
+|-------+--------------------------------------------+----------|
+
+* Resources
+
+You could refer to the following resources to understand the sytax and it's usage.
+
++ Dafny Syntax Cheatsheet https://docs.google.com/document/d/1kz5_yqzhrEyXII96eCF1YoHZhnb_6dzv-K3u79bMMis/edit?pref=2&pli=1
++ Developing Verified Programs with Dafny http://leino.science/papers/krml233.pdf
++ Type Systems in Dafny http://leino.science/papers/krml243.html
++ Dafny Reference Manual https://github.com/dafny-lang/dafny/blob/master/Docs/DafnyRef/out/DafnyRef.pdf
