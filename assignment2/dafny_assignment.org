@@ -348,6 +348,7 @@ method Main(){
 1> Ensure output value should be greater than or equal to 0.
 2> Ensure if input > 1 then output > 0
 3> Ensure if run on input x, x+1, x+2, f(x+2) == f(x+1) + f(x)
+
 ** Question 2
  Write a recursive program which computes the
  Fibonacci for a given integer. The program should
@@ -355,6 +356,15 @@ method Main(){
  appropriate recursive structure.
 
 *** Transition System Definition
+1> S_fib = < X, X_0, f, U, T, Y, h >
+2> StateSpace X = N x N x N x N (N denotes set of natural numbers.)
+3> We define rho as a function which converts input into statespace of system. rho(n) = (0,1,1,n)
+4> X_0 = rho(n)
+5> f = final state (only 1). Let (a,b,c,d) belong to X, a,b,c,d belong to N and c is equal to d.
+5> U = {next}
+6> Transition Relation T: (a,b,c,d) -> (b, a+b, c +1,d) if c < d
+7> Y is the viewspace of the system = N 
+8> h is the view function mapping final state (or any element in X) to N
 *** Fibonacci Recursive Program
  #+BEGIN_SRC :tangle
 //Inputspace
@@ -426,7 +436,12 @@ method Main(){
  #+END_SRC
 
 *** Pre Conditions
+1> Input must be a natural no. greater than or equal to 1.
 *** Post Conditions
+1> Ensure output value should be greater than or equal to 0.
+2> Ensure if input > 1 then output > 0
+3> Ensure if run on input x, x+1, x+2, f(x+2) == f(x+1) + f(x)
+
 ** Question 3
  Write a program for bubble sort which takes input
  as an integer array and produces a sorted array
