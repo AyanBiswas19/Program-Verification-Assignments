@@ -447,6 +447,19 @@ method Main(){
  as an integer array and produces a sorted array
  using bubble sort algorithm.
 *** Transition System Definition
+1> S_sort = < X, X_0, f, U, T, Y, h >
+2> StateSpace X = (N* ~ N^0, N)
+3> Input space = Integer Array
+4> We define rho as a function which converts input into statespace of system. rho(array) = (array, array.Length -1)
+This is to logically relate to the pre condition that the array is not sorted to the best of our knowledge. Hence, last 0 items are sorted,
+therefore i is initialized to the last index of the array.
+5> X_0 = rho(input)
+6> f = final state (only 1). Let (array,i) belong to X, i is equal to 0. (This relates to the post condition. The entire array is sorted.)
+That is, at the kth iteration i is decremented k times and last k items are sorted.
+7> U = {next}
+8> Transition Relation T: (arr,i) -> (arr*, i -1) when i > 0. arr = input sorted from index i to end, arr* sorted further from i-1 to end.
+7> Y is the viewspace of the system = N* ~ N^0, that is an array of size non zero.
+8> h is the view function mapping final state (or any element in X) to N* ~ N^0, that is the sorted input array.
 *** Bubble Sort Program
  #+BEGIN_SRC :tangle
 //Input space
@@ -513,7 +526,19 @@ method BubbleSort(a: array<int>)
  #+END_SRC
 
 *** Pre Conditions
+1> Input must be a finite length array of integers.
+2> Length of array must be greater than 0.
+3> Array is unsorted to the best of our knowledge.
+(It maybe a sorted array but even if it is, we do not know that.)
+
 *** Post Conditions
+1> Output must be a finite length sorted array.
+2> Length of output array = length of input array
+3> All elements of output array are present input array in the same quantity.
+4> Program must terminate in roughly O(n^2) time. We observe this as follows:
+ a> 1 transition is equivalent to a bubble operation requiring O(n) time.
+ b> As i in the states space goes from N-1 down to 0, no. of transitions is O(n)
+ c> Therefore expected time is O(n x n)
 
 * Submission Guidelines
 ** Emacs Based Submission
